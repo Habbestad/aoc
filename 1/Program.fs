@@ -14,8 +14,8 @@ let list1, list2 = "input.txt"
                    |> (fun (a1, a2) -> Array.sort a1, Array.sort a2 )
 
 // Solution part 1:
-let result1 = (list1, list2)          
-              |> (fun (a1, a2) -> Array.zip a1 a2)
+let result1 = list1 
+              |> Array.zip list2          
               |> Array.sumBy (fun (i1, i2) -> Math.Abs(i1 - i2))     
 
 printfn "Problem 1: %A" result1
