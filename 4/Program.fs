@@ -6,13 +6,17 @@
             |> String.concat ""
     |]
 
-let upperDiagonals (rows : string array) start = 
-    let n = rows.Length
-    [|       
-        for i in [start..n-1] -> 
-            [| for j in [0..n-i-1] -> string (rows[j][i + j]) |] 
-            |> String.concat "" 
-    |]
+let diagonals (rows : string array) =
+    let upperDiagonals (rows : string array) start = 
+        let n = rows.Length
+        [|       
+            for i in [start..n-1] -> 
+                [| for j in [0..n-i-1] -> string (rows[j][i + j]) |] 
+                |> String.concat "" 
+        |]
+
+    [| upperDiagonals rows 0; upperDiagonals (transpose rows) 1|]
+    |> Array.concat
 
 let searchAndCount (str : string) = 
     let check i = 
@@ -34,17 +38,13 @@ let flip (a : string) = [| for i in a.Length - 1 .. -1 .. 0 -> string a[i]|]
                         |> String.concat ""
 
 let rows = System.IO.File.ReadAllLines "input.txt"
-let rowsFlipped = rows |> Array.map flip
 let everything = 
     [|
         rows;
         transpose rows; // columns
-
-        upperDiagonals rows 0; // upper diagonals
-        upperDiagonals (transpose rows) 1; // lower diagonals
-
-        upperDiagonals rowsFlipped 0; // upper antidiagonals
-        upperDiagonals (transpose rowsFlipped) 1; // lower antidiagonals
+        diagonals rows
+        diagonals (Array.map flip rows)
     |] |> Array.concat
 
 printfn "Result: %A" (everything |> Array.sumBy searchAndCount)
+
