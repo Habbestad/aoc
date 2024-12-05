@@ -48,3 +48,29 @@ let everything =
 
 printfn "Result: %A" (everything |> Array.sumBy searchAndCount)
 
+let diags = diagonals rows
+let antiDiags = diagonals (Array.map flip rows)
+
+let check i (diag : string)= 
+    if i < 0 then - 1 else 
+        match diag[i-1..i+1] with
+        | "MAS" | "SAM" -> i 
+        | _ -> -1
+let checkAntiDiag (i, j) = 
+    let antiDiag = if j >= i then antiDiags[j]
+                    else antiDiags[140 + j]
+    check i antiDiag
+
+let searchAndCountMas diagIndex (diag: string) = 
+        [| 
+            for i in [1..diag.Length - 2] ->
+                match diag[i] with
+                | 'A' -> checkAntiDiag (i, diagIndex)
+                | _ -> 0
+        |]
+        |> Array.sum
+                            
+let result2 = diags |> Array.mapi searchAndCountMas
+                    |> Array.sum
+
+printfn "%A" result2
