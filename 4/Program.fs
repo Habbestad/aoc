@@ -5,18 +5,13 @@
             [for row in rows -> string row[i]]
             |> String.concat ""
     |]
-
-let diagonals (rows : string array) =
-    let upperDiagonals (rows : string array) start = 
-        let n = rows.Length
-        [|       
-            for i in [start..n-1] -> 
-                [| for j in [0..n-i-1] -> string (rows[j][i + j]) |] 
-                |> String.concat "" 
-        |]
-
-    [| upperDiagonals rows 0; upperDiagonals (transpose rows) 1|]
-    |> Array.concat
+let upperDiagonals (rows : string array) offset = 
+    let n = rows.Length
+    [|       
+        for i in [offset .. n-1] -> 
+            [| for j in [0..n-i-1] -> string (rows[j][i + j]) |] 
+            |> String.concat "" 
+    |]
 
 let searchAndCount (str : string) = 
     let check i = 
@@ -37,40 +32,53 @@ let searchAndCount (str : string) =
 let flip (a : string) = [| for i in a.Length - 1 .. -1 .. 0 -> string a[i]|] 
                         |> String.concat ""
 
-let rows = System.IO.File.ReadAllLines "input.txt"
+let rows = System.IO.File.ReadAllLines "testdata.txt"
+let columns = transpose rows
+let upperDiags = upperDiagonals rows 0
+let lowerDiags = upperDiagonals columns 1
+let rowsFlipped = Array.map flip rows
+let upperAntiDiags = upperDiagonals rowsFlipped 0
+let lowerAntiDiags = upperDiagonals (transpose rowsFlipped) 1
+
+
 let everything = 
     [|
         rows;
         transpose rows; // columns
-        diagonals rows
-        diagonals (Array.map flip rows)
+        upperDiags
+        lowerDiags
+        upperAntiDiags
+        lowerAntiDiags
     |] |> Array.concat
 
 printfn "Result: %A" (everything |> Array.sumBy searchAndCount)
 
-let diags = diagonals rows
-let antiDiags = diagonals (Array.map flip rows)
+let n = rows.Length;
+let check (i, j)= 
+    let c1,d1 = 
+        if j >= i 
+        then i, upperDiags[j - i]
+        else j, lowerDiags[i - j-1]
 
-let check i (diag : string)= 
-    if i < 0 then - 1 else 
-        match diag[i-1..i+1] with
-        | "MAS" | "SAM" -> i 
-        | _ -> -1
-let checkAntiDiag (i, j) = 
-    let antiDiag = if j >= i then antiDiags[j]
-                    else antiDiags[140 + j]
-    check i antiDiag
+    let c2, d2 = i, upperAntiDiags[j-1] //hmm
 
-let searchAndCountMas diagIndex (diag: string) = 
+    let containsMas ci (str : string) =  
+        match str[ci - 1 .. ci + 1] with
+        | "MAS" | "SAM" -> 1 
+        | _ -> 0
+
+    containsMas c1 d1 * containsMas c2 d2
+
+let searchAndCountMas rowIndex (row: string) = 
         [| 
-            for i in [1..diag.Length - 2] ->
-                match diag[i] with
-                | 'A' -> checkAntiDiag (i, diagIndex)
+            for colIndex in [1 .. row.Length - 2] ->
+                match row[colIndex] with
+                | 'A' -> check (rowIndex, colIndex)
                 | _ -> 0
         |]
         |> Array.sum
                             
-let result2 = diags |> Array.mapi searchAndCountMas
-                    |> Array.sum
+let result2 = rows |> Array.mapi searchAndCountMas
+                   |> Array.sum
 
 printfn "%A" result2
