@@ -14,19 +14,17 @@ let updateArrays = updates
 // Helpers:
 let order (i, j) = orderPairs |> Array.contains (i, j)
 let isCorrectlyOrdered = 
-    Array.pairwise >> Array.map order >> (Array.reduce ( && ))
+    Array.pairwise >> Array.forall order
 let middleElement (a : int array) = a[a.Length / 2]
 
 // Solution:
 let problem1 = updateArrays 
                |> Array.filter isCorrectlyOrdered
-               |> Array.map middleElement
-               |> Array.sum
+               |> Array.sumBy middleElement
 
 let problem2 = updateArrays
                |> Array.filter (not << isCorrectlyOrdered)
                |> Array.map (Array.sortWith (fun i j -> if order (j, i) then 1 else -1))
-               |> Array.map middleElement
-               |> Array.sum
+               |> Array.sumBy middleElement
 
 printfn "Problem 1: %d \nProblem 2: %d" problem1 problem2
